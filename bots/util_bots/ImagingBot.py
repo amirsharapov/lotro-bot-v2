@@ -63,7 +63,7 @@ class ImagingBot:
     # IMAGE MANIPULATION
 
     @staticmethod
-    def resize_image(img, scale=0.50):
+    def resize_image(img, scale=0.5):
         width = int(img.shape[1] * scale)
         height = int(img.shape[0] * scale)
         dim = (width, height)
@@ -140,7 +140,7 @@ class ImagingBot:
 
     @staticmethod
     def get_contours(img, img_contour):
-        contours , hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         cv2.drawContours(img_contour, contours, -1, (255, 0, 255), 7)
 
     # DISPLAYING IMAGES
@@ -164,31 +164,44 @@ class ImagingBot:
         cols = len(img_arr[0])
         has_rows = isinstance(img_arr[0], list)
         if has_rows:
+
+            resize_width = img_arr[0][0].shape[1] * scale
+            resize_height = img_arr[0][0].shape[0] * scale
+
             for i in range(0, rows):
                 for j in range(0, cols):
 
+                    # CONVERT IMAGES TO SAME SIZE
+                    # IF ALREADY SAME SIZE, NOTHING CHANGES
+                    img_arr[i][j] = cv2.resize(img_arr[i][j], (resize_width, resize_height))
+
                     # CONVERT IMAGES TO SAME CHANNEL
-                    if len(img_arr[i][j].shape) == 2:
+                    if len(img_arr[i][j].shape) == 2:  # IF GRAYSCALE
                         img_arr[i][j] = cv2.cvtColor(img_arr[i][j], cv2.COLOR_GRAY2BGR)
-                    elif img_arr[i][j].shape[2] == 4:
+                    elif img_arr[i][j].shape[2] == 4:  # IF CONTAINS ALPHA CHANNEL
                         img_arr[i][j] = cv2.cvtColor(img_arr[i][j], cv2.COLOR_BGRA2BGR)
 
-                    # SCALE IMAGE
-                    img_arr[i][j] = self.resize_image(img_arr[i][j], scale / cols)
             hor = [0] * rows
             for i in range(0, rows):
                 hor[i] = np.hstack(img_arr[i])
             ver = np.vstack(hor)
         else:
+
+            resize_width = int(img_arr[0].shape[1] / rows)
+            resize_height = int(img_arr[0].shape[0] / rows)
+
             for i in range(rows):
+
+                # CONVERT IMAGES TO SAME SIZE
+                # IF ALREADY SAME SIZE, NOTHING CHANGES
+                img_arr[i] = cv2.resize(img_arr[i], (resize_width, resize_height))
 
                 # CONVERT IMAGES TO SAME CHANNEL
                 if len(img_arr[i].shape) == 2:
                     img_arr[i] = cv2.cvtColor(img_arr[i], cv2.COLOR_GRAY2BGR)
                 elif img_arr[i].shape[2] == 4:
                     img_arr[i] = cv2.cvtColor(img_arr[i], cv2.COLOR_BGRA2BGR)
-                # SCALE IMAGE
-                img_arr[i] = self.resize_image(img_arr[i], scale / rows)
+
             hor = np.hstack(img_arr)
             ver = hor
         return ver

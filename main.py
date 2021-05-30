@@ -36,7 +36,7 @@ def capture_screen_object_recognition():
         img_array = [[img, img_blurred, img_grayed],
                      [img_canny, img_dil, img_contour]]
 
-        img_stack = bot.stack_images(img_array, 1)
+        img_stack = bot.stack_images(img_array, .8)
 
         cv.imshow(" ", img_stack)
 
