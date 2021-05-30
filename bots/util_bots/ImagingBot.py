@@ -181,9 +181,9 @@ class ImagingBot:
                     elif img_arr[i][j].shape[2] == 4:  # IF CONTAINS ALPHA CHANNEL
                         img_arr[i][j] = cv2.cvtColor(img_arr[i][j], cv2.COLOR_BGRA2BGR)
 
-            hor = [0] * rows
+            hor = []
             for i in range(0, rows):
-                hor[i] = np.hstack(img_arr[i])
+                hor.append(np.hstack(img_arr[i]))
             ver = np.vstack(hor)
         else:
 
