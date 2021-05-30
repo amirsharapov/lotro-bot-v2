@@ -72,34 +72,38 @@ class ImagingBot:
     # MASKING
 
     @staticmethod
-    def create_mask(img, lower, upper):
+    def get_mask(img, lower, upper):
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower, upper)
         res = cv2.bitwise_and(img, img, mask=mask)
         return mask, res
 
+    # TRACKBARS
+
+    # TODO: Create trackbar for an option to move the area of focus of the image
+
     @staticmethod
-    def create_hsv_trackbar(window_name="Trackbars"):
+    def create_hsv_trackbar(window_name="HSV Trackbars"):
         """
         Creates an HSV trackbar
         :param window_name: Name of the window. Default="Trackbars"
         :return: None
         """
 
-        def create_trackbar_callback(x):
+        def trackbar_callback(x):
             pass
 
         cv2.namedWindow(window_name)
 
-        cv2.createTrackbar("LH", window_name, 0, 179, create_trackbar_callback)
-        cv2.createTrackbar("LS", window_name, 0, 255, create_trackbar_callback)
-        cv2.createTrackbar("LV", window_name, 0, 255, create_trackbar_callback)
-        cv2.createTrackbar("UH", window_name, 179, 179, create_trackbar_callback)
-        cv2.createTrackbar("US", window_name, 255, 255, create_trackbar_callback)
-        cv2.createTrackbar("UV", window_name, 255, 255, create_trackbar_callback)
+        cv2.createTrackbar("LH", window_name, 0, 179, trackbar_callback)
+        cv2.createTrackbar("LS", window_name, 0, 255, trackbar_callback)
+        cv2.createTrackbar("LV", window_name, 0, 255, trackbar_callback)
+        cv2.createTrackbar("UH", window_name, 179, 179, trackbar_callback)
+        cv2.createTrackbar("US", window_name, 255, 255, trackbar_callback)
+        cv2.createTrackbar("UV", window_name, 255, 255, trackbar_callback)
 
     @staticmethod
-    def get_hsv_trackbar_values(window_name="Trackbars"):
+    def get_hsv_trackbar_values(window_name="HSV Trackbars"):
         """
         Returns the HSV values from a window containing HSV trackbars
         :param window_name: Name of the window. Default="Trackbars"
@@ -117,7 +121,36 @@ class ImagingBot:
 
         return lower, upper
 
+    @staticmethod
+    def create_canny_trackbar(window_name="Canny Trackbars"):
+        def trackbar_callback(x):
+            pass
+
+        cv2.namedWindow(window_name)
+
+        cv2.createTrackbar("TH1", window_name, 0, 255, trackbar_callback)
+        cv2.createTrackbar("TH2", window_name, 0, 255, trackbar_callback)
+
+    @staticmethod
+    def get_canny_trackbar_values(window_name="Canny Trackbars"):
+        threshold_1 = cv2.getTrackbarPos("TH1", window_name)
+        threshold_2 = cv2.getTrackbarPos("TH2", window_name)
+
+        return threshold_1, threshold_2
+
+    @staticmethod
+    def get_contours(img, img_contour):
+        contours , hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        cv2.drawContours(img_contour, contours, -1, (255, 0, 255), 7)
+
     # DISPLAYING IMAGES
+
+    def get_blank_image(self, height=None, width=None, channels=3):
+        if height is None:
+            height = self.get_screen_height()
+        if width is None:
+            width = self.get_screen_width()
+        return np.zeros((height, width, channels), np.uint8)
 
     def stack_images(self, img_arr, scale=1):
         """
@@ -127,12 +160,12 @@ class ImagingBot:
         :param scale: scaling value
         :return: nparray
         """
-        cols = len(img_arr)
-        rows = len(img_arr[0])
+        rows = len(img_arr)
+        cols = len(img_arr[0])
         has_rows = isinstance(img_arr[0], list)
         if has_rows:
-            for i in range(rows):
-                for j in range(cols):
+            for i in range(0, rows):
+                for j in range(0, cols):
 
                     # CONVERT IMAGES TO SAME CHANNEL
                     if len(img_arr[i][j].shape) == 2:
@@ -143,11 +176,11 @@ class ImagingBot:
                     # SCALE IMAGE
                     img_arr[i][j] = self.resize_image(img_arr[i][j], scale / cols)
             hor = [0] * rows
-            for i in range(rows):
+            for i in range(0, rows):
                 hor[i] = np.hstack(img_arr[i])
             ver = np.vstack(hor)
         else:
-            for i in range(cols):
+            for i in range(rows):
 
                 # CONVERT IMAGES TO SAME CHANNEL
                 if len(img_arr[i].shape) == 2:
@@ -155,7 +188,7 @@ class ImagingBot:
                 elif img_arr[i].shape[2] == 4:
                     img_arr[i] = cv2.cvtColor(img_arr[i], cv2.COLOR_BGRA2BGR)
                 # SCALE IMAGE
-                img_arr[i] = self.resize_image(img_arr[i], scale / cols)
+                img_arr[i] = self.resize_image(img_arr[i], scale / rows)
             hor = np.hstack(img_arr)
             ver = hor
         return ver

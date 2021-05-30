@@ -1,6 +1,8 @@
 from time import time
 
+import cv2
 import cv2 as cv
+import numpy
 
 from bots.util_bots.ImagingBot import ImagingBot
 
@@ -10,13 +12,33 @@ bot = ImagingBot()
 def capture_screen_object_recognition():
     loop_time = time();
 
-    while True:
-        img = bot.get_screenshot()
-        img_scaled = bot.resize_image(img)
-        img_blurred = cv.GaussianBlur(img_scaled, (7, 7), 1)
-        img_grayed = cv.cvtColor(img_blurred, cv.COLOR_BGR2GRAY)
+    bot.create_canny_trackbar()
+    # bot.create_hsv_trackbar()
 
-        cv.imshow(" ", img_grayed)
+    blank = bot.get_blank_image(1080, 1920)
+    # blank = bot.get_blank_image()
+
+    while True:
+
+        thresh_1, thresh_2 = bot.get_canny_trackbar_values()
+        # lower, upper = bot.get_hsv_trackbar_values()
+
+        img = bot.get_screenshot()
+        img_contour = img.copy()
+        img_blurred = cv.GaussianBlur(img, (7, 7), 2)
+        # _, img_res = bot.get_mask(img, lower, upper)
+        img_grayed = cv.cvtColor(img_blurred, cv.COLOR_BGR2GRAY)
+        img_canny = cv.Canny(img_grayed, thresh_1, thresh_2, )
+        img_dil = cv2.dilate(img_canny, numpy.ones((5,5)), iterations=1)
+
+        bot.get_contours(img_dil, img_contour)
+
+        img_array = [[img, img_blurred, img_grayed],
+                     [img_canny, img_dil, img_contour]]
+
+        img_stack = bot.stack_images(img_array, 1)
+
+        cv.imshow(" ", img_stack)
 
         print(f"FPS: {1 / (time() - loop_time)}")
         loop_time = time()
@@ -38,7 +60,7 @@ def capture_screen_with_mask():
 
         # CREATE MASK USING TRACKBAR (TEMP FOR TESTING)
         lower, upper = bot.get_hsv_trackbar_values()
-        mask, res = bot.create_mask(img, lower, upper)
+        mask, res = bot.get_mask(img, lower, upper)
 
         # SHOW EACH IMAGE
         cv.imshow("Image", img)
