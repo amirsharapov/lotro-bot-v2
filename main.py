@@ -1,16 +1,57 @@
-# This is a sample Python script.
+from time import time
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import cv2 as cv
 
+from bots.util_bots.ImagingBot import ImagingBot
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+bot = ImagingBot()
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+def capture_screen_object_recognition():
+    loop_time = time();
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    while True:
+        img = bot.get_screenshot()
+        img_scaled = bot.resize_image(img)
+        img_blurred = cv.GaussianBlur(img_scaled, (7, 7), 1)
+        img_grayed = cv.cvtColor(img_blurred, cv.COLOR_BGR2GRAY)
+
+        cv.imshow(" ", img_grayed)
+
+        print(f"FPS: {1 / (time() - loop_time)}")
+        loop_time = time()
+
+        # SET BREAK
+        if cv.waitKey(1) & 0xFF == ord('q'):
+            cv.destroyAllWindows()
+            break
+
+
+def capture_screen_with_mask():
+    loop_time = time()
+    bot.create_hsv_trackbar()
+    while True:
+
+        # GET IMAGE
+        img = bot.get_screenshot()
+        img = bot.resize_image(img, 0.6)
+
+        # CREATE MASK USING TRACKBAR (TEMP FOR TESTING)
+        lower, upper = bot.get_hsv_trackbar_values()
+        mask, res = bot.create_mask(img, lower, upper)
+
+        # SHOW EACH IMAGE
+        cv.imshow("Image", img)
+        cv.imshow("Mask", mask)
+        cv.imshow("Result", res)
+
+        print(f"FPS: {1 / (time() - loop_time)}")
+        loop_time = time()
+
+        # SET BREAK
+        if cv.waitKey(1) & 0xFF == ord('q'):
+            cv.destroyAllWindows()
+            break
+
+
+capture_screen_object_recognition()
