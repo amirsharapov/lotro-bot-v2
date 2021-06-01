@@ -31,13 +31,14 @@ class ImageProcessingBotService:
         :param window_name: Name of the window
         :return: None
         """
-        if window_size is None:
-            if not self.is_window_open(window_name):
-                cv2.namedWindow(window_name)
-                if window_size is not None:
-                    w = window_size[0]
-                    h = window_size[1]
-                    cv2.resizeWindow(window_name, w, h)
+        if not self.is_window_open(window_name):
+            cv2.namedWindow(window_name)
+            if window_size is None:
+                pass
+            if window_size is not None:
+                w = window_size[0]
+                h = window_size[1]
+                cv2.resizeWindow(window_name, w, h)
 
     @staticmethod
     def is_window_open(window_name):
@@ -169,7 +170,7 @@ class ImageProcessingBotService:
         :return: nparray
         """
         x, y, w, h = rect
-        img = self.convert_to_bgr(img)
+        img = self.convert_to_bgr(img.copy())
         if w == 0:
             w = self.target_monitor_width
         if w == 0:
@@ -629,7 +630,10 @@ class ImageProcessingBotService:
         for contour in contours:
             area = cv2.contourArea(contour)
             if min_area < area < max_area:
-                filtered_contours.append((contour, area))
+                peri = cv2.arcLength(contour, True)
+                approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
+                x, y, w, h = cv2.boundingRect(approx)
+                filtered_contours.append((contour, area, approx, (x, y, w, h)))
         return filtered_contours
 
     @staticmethod
@@ -638,31 +642,32 @@ class ImageProcessingBotService:
             offset = None
         cv2.drawContours(img, contour, -1, color, thickness, offset=offset)
 
-    def find_and_draw_contours(self, img, img_contour, min_area=1000, max_area=None, drawing_offset=(0, 0)):
+    def find_and_draw_contours(self, img, contour_canvas, min_area=1000, max_area=None, drawing_offset=(0, 0)):
         """
         Draws contours on an image
         :param drawing_offset: offset for the contour and object drawing
         :param img: Image to detect contours
-        :param img_contour: Image to draw contours on
+        :param contour_canvas: Image to draw contours on
         :param min_area: Minimum area to detect contour
         :param max_area: Maximum area to detect contour
         :return: array of Tuples [(x, y, w, h), ...]
         """
         # DETECT OBJECTS
         contours = self.find_contours(img, min_area, max_area)
+        x_offset, y_offset = drawing_offset
+        # clean_img = contour_canvas.copy()
 
         # FOR EACH OBJECT, DRAW CONTOUR AND RECTANGLE
-        for cnt, area in contours:
-            cv2.drawContours(img_contour, cnt, -1, (0, 255, 0), 2, offset=drawing_offset)
-            perimeter = cv2.arcLength(cnt, True)
-            approx = cv2.approxPolyDP(cnt, 0.02 * perimeter, True)
-            x_offset, y_offset = drawing_offset
-            x, y, w, h = cv2.boundingRect(approx)
+        for cnt, area, approx, rect in contours:
+            cv2.drawContours(contour_canvas, cnt, -1, (0, 255, 0), 2, offset=drawing_offset)
+            x, y, w, h = rect
 
-            self.draw_rectangle(img_contour, (x + x_offset, y + y_offset, w, h))
+            self.draw_rectangle(contour_canvas, (x + x_offset, y + y_offset, w, h))
+            # segment = self.get_img_segment(clean_img, (x + x_offset, y + y_offset, w, h))
+            # self.save_as_training_data(segment)
 
-            self.write_text(img_contour, f'Points: {len(approx)}', (x + x_offset + w + 10, y + y_offset + 20))
-            self.write_text(img_contour, f'Area: {int(area)}', (x + x_offset + w + 10, y + y_offset + 35))
+            self.write_text(contour_canvas, f'Points: {len(approx)}', (x + x_offset + w + 10, y + y_offset + 20))
+            self.write_text(contour_canvas, f'Area: {int(area)}', (x + x_offset + w + 10, y + y_offset + 35))
 
     # DISPLAYING IMAGES
 

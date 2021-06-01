@@ -19,15 +19,18 @@ class DetectionBotService:
         self.chat_rect = game_constants.LOCATIONS['chat']
         self.skill_bar_rect = game_constants.LOCATIONS['skill_bar']
 
-    def get_mini_map(self):
-        img = self.image_processing_bot.screenshot()
+    def get_mini_map(self, img=None):
+        if img is None:
+            img = self.image_processing_bot.screenshot()
+        else:
+            img = img.copy()
         return self.image_processing_bot.get_img_segment(img, self.mini_map_rect)
 
-    def get_mini_map_cropped(self):
-        img = self.get_mini_map()
+    def get_mini_map_cropped(self, img=None):
+        img = self.get_mini_map(img)
         return self.image_processing_bot.get_img_segment(img, self.mini_map_cropped_rect)
 
-    def detect_yellow_nameplates(self, contour_canvas=None):
+    def detect_yellow_nameplates(self, contour_canvas=None, economic=True):
         detection_obj_values = game_constants.RECOGNITION['nameplates']['colors']['yellow']
 
         # SETUP IMAGE PROCESSING VALUES
@@ -46,8 +49,12 @@ class DetectionBotService:
         dilation_kernel = detection_obj_values['dilation']['kernel']
         dilation_iterations = detection_obj_values['dilation']['iterations']
 
-        img = self.image_processing_bot.screenshot()
+        if contour_canvas is not None and economic:
+            img = contour_canvas.copy()
+        else:
+            img = self.image_processing_bot.screenshot()
         img = self.image_processing_bot.convert_to_bgr(img)
+
         self.image_processing_bot.draw_rectangle(img, self.portrait_rect, (0, 0, 0), -1)  # hide character portrait
         self.image_processing_bot.draw_rectangle(img, self.mini_map_rect, (0, 0, 0), -1)  # hide mini map
         self.image_processing_bot.draw_rectangle(img, self.chat_rect, (0, 0, 0), -1)  # hide chat channels
@@ -69,7 +76,7 @@ class DetectionBotService:
             contour_max_area
         )
 
-    def detect_white_nameplates(self, contour_canvas=None):
+    def detect_white_nameplates(self, contour_canvas=None, economic=True):
         detection_obj_values = game_constants.RECOGNITION['nameplates']['colors']['white']
 
         # GET IMAGE PROCESSING VALUES
@@ -93,7 +100,10 @@ class DetectionBotService:
         erosion_iterations = detection_obj_values['erosion']['iterations']
 
         # SETUP IMAGES FOR PROCESSING
-        img = self.image_processing_bot.screenshot()
+        if contour_canvas is not None and economic:
+            img = contour_canvas.copy()
+        else:
+            img = self.image_processing_bot.screenshot()
         img = self.image_processing_bot.convert_to_bgr(img)
 
         self.image_processing_bot.draw_rectangle(img, self.portrait_rect, (0, 0, 0), -1)  # hide character portrait
@@ -150,7 +160,7 @@ class DetectionBotService:
         contour_max_area = detection_obj_values['contour']['max_area']
 
         # SETUP IMAGES FOR PROCESSING
-        mini_map = self.get_mini_map()
+        mini_map = self.get_mini_map(contour_canvas)
         mini_map = self.image_processing_bot.convert_to_bgr(mini_map)
         if contour_canvas is None:
             contour_canvas = mini_map.copy()
@@ -186,7 +196,7 @@ class DetectionBotService:
                 drawing_offset=offset
             )
 
-    def detect_mini_map_character_marker(self, contour_canvas=None):
+    def detect_mini_map_character_marker(self, contour_canvas=None, economic=True):
         detection_obj_values = game_constants.RECOGNITION['objects']['mini_map']['character_marker']
 
         # GET IMAGE PROCESSING VALUES
@@ -209,7 +219,7 @@ class DetectionBotService:
         contour_max_area = detection_obj_values['contour']['max_area']
 
         # SETUP IMAGES FOR PROCESSING
-        mini_map = self.get_mini_map_cropped()
+        mini_map = self.get_mini_map_cropped(contour_canvas)
         mini_map = self.image_processing_bot.convert_to_bgr(mini_map)
         if contour_canvas is None:
             contour_canvas = mini_map.copy()
