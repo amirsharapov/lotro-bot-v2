@@ -1,4 +1,3 @@
-import datetime
 import time
 
 import cv2
@@ -28,9 +27,10 @@ class DetectionBotService:
         img = self.get_mini_map()
         return self.image_processing_bot.get_img_segment(img, self.mini_map_cropped_rect)
 
-    def detect_yellow_nameplates(self):
+    def detect_yellow_nameplates(self, contour_canvas=None):
         detection_obj_values = game_constants.RECOGNITION['nameplates']['colors']['yellow']
 
+        # SETUP IMAGE PROCESSING VALUES
         gaussian_kernel = detection_obj_values['gaussian_blur']['kernel']
         gaussian_sigma_x = detection_obj_values['gaussian_blur']['sigma_x']
         threshold_1 = detection_obj_values['canny']['threshold_1']
@@ -46,46 +46,33 @@ class DetectionBotService:
         dilation_kernel = detection_obj_values['dilation']['kernel']
         dilation_iterations = detection_obj_values['dilation']['iterations']
 
-        while cv2.waitKey(1):
+        img = self.image_processing_bot.screenshot()
+        img = self.image_processing_bot.convert_to_bgr(img)
+        self.image_processing_bot.draw_rectangle(img, self.portrait_rect, (0, 0, 0), -1)  # hide character portrait
+        self.image_processing_bot.draw_rectangle(img, self.mini_map_rect, (0, 0, 0), -1)  # hide mini map
+        self.image_processing_bot.draw_rectangle(img, self.chat_rect, (0, 0, 0), -1)  # hide chat channels
+        self.image_processing_bot.draw_rectangle(img, self.skill_bar_rect, (0, 0, 0), -1)  # hide main skill bar
 
-            img = self.image_processing_bot.screenshot()
-            img = self.image_processing_bot.convert_to_bgr(img)
+        if contour_canvas is None:
+            contour_canvas = img.copy()
 
-            self.image_processing_bot.draw_rectangle(img, self.portrait_rect, (0, 0, 0), -1)  # hide character portrait
-            self.image_processing_bot.draw_rectangle(img, self.mini_map_rect, (0, 0, 0), -1)  # hide mini map
-            self.image_processing_bot.draw_rectangle(img, self.chat_rect, (0, 0, 0), -1)  # hide chat channels
-            self.image_processing_bot.draw_rectangle(img, self.skill_bar_rect, (0, 0, 0), -1)  # hide main skill bar
+        blurred = self.image_processing_bot.gaussian_blur(img, gaussian_kernel, gaussian_sigma_x)
+        masked = self.image_processing_bot.mask(blurred, lower_hsv, upper_hsv)
+        grayed = self.image_processing_bot.gray(masked)
+        canny = self.image_processing_bot.canny(grayed, threshold_1, threshold_2)
+        dilated = self.image_processing_bot.dilate(canny, dilation_kernel, dilation_iterations)
 
-            img_contour = img.copy()
+        self.image_processing_bot.find_and_draw_contours(
+            dilated,
+            contour_canvas,
+            contour_min_area,
+            contour_max_area
+        )
 
-            blurred = self.image_processing_bot.gaussian_blur(img, gaussian_kernel, gaussian_sigma_x)
-            masked = self.image_processing_bot.mask(blurred, lower_hsv, upper_hsv)
-            grayed = self.image_processing_bot.gray(masked)
-            canny = self.image_processing_bot.canny(grayed, threshold_1, threshold_2)
-            dilated = self.image_processing_bot.dilate(canny, dilation_kernel, dilation_iterations)
-            rects = self.image_processing_bot.draw_contours(dilated, img_contour, contour_min_area, contour_max_area)
-
-            img_stack = [img_contour]
-
-            stacked = self.image_processing_bot.stack_images(img_stack, .45)
-            cv2.imshow('yellow_nameplates', stacked)
-
-            for rect in rects:
-                segment = self.image_processing_bot.get_img_segment(img, rect)
-                print(segment)
-                self.image_processing_bot.save_as_training_data(segment)
-
-            time.sleep(.2)
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-        cv2.destroyAllWindows()
-
-    def detect_white_nameplates(self):
-
+    def detect_white_nameplates(self, contour_canvas=None):
         detection_obj_values = game_constants.RECOGNITION['nameplates']['colors']['white']
 
+        # GET IMAGE PROCESSING VALUES
         gaussian_kernel = detection_obj_values['gaussian_blur']['kernel']
         gaussian_sigma_x = detection_obj_values['gaussian_blur']['sigma_x']
         brightness = detection_obj_values['brightness']['level']
@@ -105,40 +92,45 @@ class DetectionBotService:
         erosion_kernel = detection_obj_values['erosion']['kernel']
         erosion_iterations = detection_obj_values['erosion']['iterations']
 
-        while cv2.waitKey(1):
+        # SETUP IMAGES FOR PROCESSING
+        img = self.image_processing_bot.screenshot()
+        img = self.image_processing_bot.convert_to_bgr(img)
 
-            img = self.image_processing_bot.screenshot()
-            img = self.image_processing_bot.convert_to_bgr(img)
+        self.image_processing_bot.draw_rectangle(img, self.portrait_rect, (0, 0, 0), -1)  # hide character portrait
+        self.image_processing_bot.draw_rectangle(img, self.mini_map_rect, (0, 0, 0), -1)  # hide mini map
+        self.image_processing_bot.draw_rectangle(img, self.chat_rect, (0, 0, 0), -1)  # hide chat channels
+        self.image_processing_bot.draw_rectangle(img, self.skill_bar_rect, (0, 0, 0), -1)  # hide main skill bar
 
-            self.image_processing_bot.draw_rectangle(img, self.portrait_rect, (0, 0, 0), -1)  # hide character portrait
-            self.image_processing_bot.draw_rectangle(img, self.mini_map_rect, (0, 0, 0), -1)  # hide mini map
-            self.image_processing_bot.draw_rectangle(img, self.chat_rect, (0, 0, 0), -1)  # hide chat channels
-            self.image_processing_bot.draw_rectangle(img, self.skill_bar_rect, (0, 0, 0), -1)  # hide main skill bar
+        if contour_canvas is None:
+            contour_canvas = img.copy()
 
-            img_contour = img.copy()
+        # PROCESS IMAGES
+        blurred = self.image_processing_bot.gaussian_blur(img, gaussian_kernel, gaussian_sigma_x)
+        brightness_adjusted = self.image_processing_bot.adjust_brightness(blurred, brightness)
+        contrast_adjusted = self.image_processing_bot.adjust_contrast(brightness_adjusted, contrast)
+        masked = self.image_processing_bot.mask(contrast_adjusted, lower_hsv, upper_hsv)
+        grayed = self.image_processing_bot.gray(masked)
+        canny = self.image_processing_bot.canny(grayed, threshold_1, threshold_2)
+        dilated = self.image_processing_bot.dilate(canny, dilation_kernel, dilation_iterations)
+        eroded = self.image_processing_bot.erode(dilated, erosion_kernel, erosion_iterations)
 
-            blurred = self.image_processing_bot.gaussian_blur(img, gaussian_kernel, gaussian_sigma_x)
-            brightness_adjusted = self.image_processing_bot.adjust_brightness(blurred, brightness)
-            contrast_adjusted = self.image_processing_bot.adjust_contrast(brightness_adjusted, contrast)
-            masked = self.image_processing_bot.mask(contrast_adjusted, lower_hsv, upper_hsv)
-            grayed = self.image_processing_bot.gray(masked)
-            canny = self.image_processing_bot.canny(grayed, threshold_1, threshold_2)
-            dilated = self.image_processing_bot.dilate(canny, dilation_kernel, dilation_iterations)
-            eroded = self.image_processing_bot.erode(dilated, erosion_kernel, erosion_iterations)
-            self.image_processing_bot.draw_contours(eroded, img_contour, contour_min_area, contour_max_area)
+        # IMAGE HAS NO OFFSET
+        self.image_processing_bot.find_and_draw_contours(
+            eroded,
+            contour_canvas,
+            contour_min_area,
+            contour_max_area
+        )
 
-            stacked = self.image_processing_bot.stack_images([img_contour], .45)
-            cv2.imshow('white_nameplates', stacked)
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-        cv2.destroyAllWindows()
-
-    def detect_mini_map_facilities(self):
-        blank_image = self.image_processing_bot.get_blank_image()
+    def detect_mini_map_crafting_facilities(self, contour_canvas=None):
+        """
+        Detects crafting facilities on the mini map
+        :param contour_canvas: Image to draw canvas on. DO NOT supply an image smaller than the full size of the screen
+        :return: None
+        """
         detection_obj_values = game_constants.RECOGNITION['objects']['mini_map']['crafting_facility']
 
+        # GET IMAGE PROCESSING VALUES
         gaussian_blur_kernel = detection_obj_values['gaussian_blur']['kernel']
         gaussian_blur_sigma_x = detection_obj_values['gaussian_blur']['sigma_x']
         contrast = detection_obj_values['brightness']['value']
@@ -157,49 +149,47 @@ class DetectionBotService:
         contour_min_area = detection_obj_values['contour']['min_area']
         contour_max_area = detection_obj_values['contour']['max_area']
 
-        while cv2.waitKey(1):
-            img = self.get_mini_map()
-            img = self.image_processing_bot.convert_to_bgr(img)
-            contour = img.copy()
+        # SETUP IMAGES FOR PROCESSING
+        mini_map = self.get_mini_map()
+        mini_map = self.image_processing_bot.convert_to_bgr(mini_map)
+        if contour_canvas is None:
+            contour_canvas = mini_map.copy()
 
-            blurred = self.image_processing_bot.gaussian_blur(img, gaussian_blur_kernel, gaussian_blur_sigma_x)
-            contrast_adjusted = self.image_processing_bot.adjust_contrast(blurred, contrast)
-            masked = self.image_processing_bot.mask(contrast_adjusted, lower_hsv, upper_hsv)
-            grayed = self.image_processing_bot.gray(masked)
-            canny = self.image_processing_bot.canny(grayed, canny_threshold_1, canny_threshold_2)
-            dilated = self.image_processing_bot.dilate(canny, dilation_kernel, dilation_iterations)
-            eroded = self.image_processing_bot.erode(dilated, erosion_kernel, erosion_iterations)
+        # PROCESS IMAGE
+        blurred = self.image_processing_bot.gaussian_blur(mini_map, gaussian_blur_kernel, gaussian_blur_sigma_x)
+        contrast_adjusted = self.image_processing_bot.adjust_contrast(blurred, contrast)
+        masked = self.image_processing_bot.mask(contrast_adjusted, lower_hsv, upper_hsv)
+        grayed = self.image_processing_bot.gray(masked)
+        canny = self.image_processing_bot.canny(grayed, canny_threshold_1, canny_threshold_2)
+        dilated = self.image_processing_bot.dilate(canny, dilation_kernel, dilation_iterations)
+        eroded = self.image_processing_bot.erode(dilated, erosion_kernel, erosion_iterations)
 
-            rects = self.image_processing_bot.draw_contours(eroded, contour, contour_min_area, contour_max_area)
+        # GET IMAGE OFFSET
+        x1, y1, _, _ = self.mini_map_rect
+        offset = (x1, y1)
 
-            img_stack = [[img, blurred],
-                         [contrast_adjusted, blank_image],
-                         [masked, grayed],
-                         [canny, dilated],
-                         [eroded, contour]]
+        # IF CANVAS IS PROVIDED
+        if contour_canvas is None:
+            self.image_processing_bot.find_and_draw_contours(
+                eroded,
+                contour_canvas,
+                contour_min_area,
+                contour_max_area
+            )
+        # IF CANVAS IS NOT PROVIDED
+        else:
+            self.image_processing_bot.find_and_draw_contours(
+                eroded,
+                contour_canvas,
+                contour_min_area,
+                contour_max_area,
+                drawing_offset=offset
+            )
 
-            stacked = self.image_processing_bot.stack_images([contour], 1.5)
-            cv2.imshow('crafting_facilities', stacked)
-
-            for rect in rects:
-                x1, y1, _, _ = self.mini_map_rect
-                x2, y2, _, _ = self.mini_map_cropped_rect
-                x3, y3, w, h = rect
-
-                real_rect = (x1 + x2 + x3,
-                             y1 + y2 + y3,
-                             w, h)
-                print(real_rect)
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-        cv2.destroyAllWindows()
-
-    def detect_mini_map_character_marker(self):
-        blank_image = self.image_processing_bot.get_blank_image()
+    def detect_mini_map_character_marker(self, contour_canvas=None):
         detection_obj_values = game_constants.RECOGNITION['objects']['mini_map']['character_marker']
 
+        # GET IMAGE PROCESSING VALUES
         gaussian_blur_kernel = detection_obj_values['gaussian_blur']['kernel']
         gaussian_blur_sigma_x = detection_obj_values['gaussian_blur']['sigma_x']
         brightness = detection_obj_values['brightness']['level']
@@ -218,31 +208,42 @@ class DetectionBotService:
         contour_min_area = detection_obj_values['contour']['min_area']
         contour_max_area = detection_obj_values['contour']['max_area']
 
-        while cv2.waitKey(1):
-            img = self.get_mini_map_cropped()
-            img = self.image_processing_bot.convert_to_bgr(img)
-            contour = img.copy()
+        # SETUP IMAGES FOR PROCESSING
+        mini_map = self.get_mini_map_cropped()
+        mini_map = self.image_processing_bot.convert_to_bgr(mini_map)
+        if contour_canvas is None:
+            contour_canvas = mini_map.copy()
 
-            blurred = self.image_processing_bot.gaussian_blur(img, gaussian_blur_kernel, gaussian_blur_sigma_x)
-            brightness_adjusted = self.image_processing_bot.adjust_contrast(blurred, brightness)
-            masked = self.image_processing_bot.mask(brightness_adjusted, lower_hsv, upper_hsv)
-            grayed = self.image_processing_bot.gray(masked)
-            canny = self.image_processing_bot.canny(grayed, canny_threshold_1, canny_threshold_2)
-            dilated = self.image_processing_bot.dilate(canny, dilation_kernel, dilation_iterations)
-            eroded = self.image_processing_bot.erode(dilated, erosion_kernel, erosion_iterations)
+        # PROCESS IMAGE
+        blurred = self.image_processing_bot.gaussian_blur(mini_map, gaussian_blur_kernel, gaussian_blur_sigma_x)
+        brightness_adjusted = self.image_processing_bot.adjust_contrast(blurred, brightness)
+        masked = self.image_processing_bot.mask(brightness_adjusted, lower_hsv, upper_hsv)
+        grayed = self.image_processing_bot.gray(masked)
+        canny = self.image_processing_bot.canny(grayed, canny_threshold_1, canny_threshold_2)
+        dilated = self.image_processing_bot.dilate(canny, dilation_kernel, dilation_iterations)
+        eroded = self.image_processing_bot.erode(dilated, erosion_kernel, erosion_iterations)
 
-            self.image_processing_bot.draw_contours(eroded, contour, contour_min_area, contour_max_area)
+        # GET IMAGE OFFSET
+        x1, y1, _, _ = self.mini_map_rect
+        x2, y2, _, _ = self.mini_map_cropped_rect
+        offset = (x1 + x2, y1 + y2)
 
-            img_stack = [[img, blurred],
-                         [brightness_adjusted, blank_image],
-                         [masked, grayed],
-                         [canny, dilated],
-                         [eroded, contour]]
+        # IF CANVAS IS PROVIDED
+        if contour_canvas is None:
+            self.image_processing_bot.find_and_draw_contours(
+                eroded,
+                contour_canvas,
+                contour_min_area,
+                contour_max_area
+            )
+        # IF CANVAS IS NOT PROVIDED
+        else:
+            self.image_processing_bot.find_and_draw_contours(
+                eroded,
+                contour_canvas,
+                contour_min_area,
+                contour_max_area,
+                drawing_offset=offset
+            )
 
-            stacked = self.image_processing_bot.stack_images([contour], 3)
-            cv2.imshow('character_marker', stacked)
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-        cv2.destroyAllWindows()

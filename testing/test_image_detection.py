@@ -67,7 +67,7 @@ def main():
         eroded = bot.erode(dilated, erosion_kernel, erosion_iterations)
 
         # DRAW CONTOURS
-        bot.draw_contours(eroded, contour, contour_min_area, contour_max_area)
+        bot.find_and_draw_contours(eroded, contour, contour_min_area, contour_max_area)
 
         # STACK IMAGES
         img_stack = [[img, blurred],

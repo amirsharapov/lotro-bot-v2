@@ -54,7 +54,7 @@ class NavigationBot:
             dilated = self.image_processing_bot.dilate(canny, dilation_kernel, dilation_iterations)
             eroded = self.image_processing_bot.erode(dilated, erosion_kernel, erosion_iterations)
 
-            self.image_processing_bot.draw_contours(eroded, contour, contour_min_area, contour_max_area)
+            self.image_processing_bot.find_and_draw_contours(eroded, contour, contour_min_area, contour_max_area)
 
             img_stack = [[img, blurred],
                          [contrast_adjusted, blank_image],
@@ -102,7 +102,7 @@ class NavigationBot:
             dilated = self.image_processing_bot.dilate(canny, dilation_kernel, dilation_iterations)
             eroded = self.image_processing_bot.erode(dilated, erosion_kernel, erosion_iterations)
 
-            self.image_processing_bot.draw_contours(eroded, contour, contour_min_area, contour_max_area)
+            self.image_processing_bot.find_and_draw_contours(eroded, contour, contour_min_area, contour_max_area)
 
             img_stack = [[img, blurred],
                          [brightness_adjusted, blank_image],

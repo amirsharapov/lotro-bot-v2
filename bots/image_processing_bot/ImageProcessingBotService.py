@@ -610,35 +610,59 @@ class ImageProcessingBotService:
         x, y, width, height = rect
         cv2.rectangle(img, (x, y), (x + width, y + height), color, thickness=thickness)
 
-    def draw_contours(self, img, img_contour, min_area=1000, max_area=None):
+    def find_contours(self, img, min_area=0, max_area=0, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_NONE):
+        """
+        Gets all the contours that match minimum and maximum area range.
+        :param img: image to draw the contours on
+        :param min_area: Minimum area filter
+        :param max_area: Maximum area filter
+        :param mode: mode (Default=cv2.RETR_EXTERNAL)
+        :param method: Method (Default=cv2.CHAIN_APPROX_NONE)
+        :return: Array of npArrays
+        """
+        if max_area is None:
+            max_area = int(self.get_screen_width() * self.get_screen_height() / 10)
+        contours, hierarchy = cv2.findContours(img, mode, method)
+
+        filtered_contours = []
+
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if min_area < area < max_area:
+                filtered_contours.append((contour, area))
+        return filtered_contours
+
+    @staticmethod
+    def draw_contour(img, contour, color=(0, 255, 0), thickness=2, offset=(0, 0)):
+        if offset == (0, 0):
+            offset = None
+        cv2.drawContours(img, contour, -1, color, thickness, offset=offset)
+
+    def find_and_draw_contours(self, img, img_contour, min_area=1000, max_area=None, drawing_offset=(0, 0)):
         """
         Draws contours on an image
+        :param drawing_offset: offset for the contour and object drawing
         :param img: Image to detect contours
         :param img_contour: Image to draw contours on
         :param min_area: Minimum area to detect contour
         :param max_area: Maximum area to detect contour
         :return: array of Tuples [(x, y, w, h), ...]
         """
-        if max_area is None:
-            max_area = int(self.get_screen_width() * self.get_screen_height() / 10)
-        contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        # DETECT OBJECTS
+        contours = self.find_contours(img, min_area, max_area)
 
-        rects = []
+        # FOR EACH OBJECT, DRAW CONTOUR AND RECTANGLE
+        for cnt, area in contours:
+            cv2.drawContours(img_contour, cnt, -1, (0, 255, 0), 2, offset=drawing_offset)
+            perimeter = cv2.arcLength(cnt, True)
+            approx = cv2.approxPolyDP(cnt, 0.02 * perimeter, True)
+            x_offset, y_offset = drawing_offset
+            x, y, w, h = cv2.boundingRect(approx)
 
-        for cnt in contours:
-            area = cv2.contourArea(cnt)
-            if min_area < area < max_area:
-                cv2.drawContours(img_contour, cnt, -1, (255, 0, 255), 2)
-                perimeter = cv2.arcLength(cnt, True)
-                approx = cv2.approxPolyDP(cnt, 0.02 * perimeter, True)
-                x, y, w, h = cv2.boundingRect(approx)
-                rects.append((x, y, w, h))
+            self.draw_rectangle(img_contour, (x + x_offset, y + y_offset, w, h))
 
-                self.draw_rectangle(img_contour, (x, y, w, h))
-
-                self.write_text(img_contour, f'Points: {len(approx)}', (x + w + 10, y + 20))
-                self.write_text(img_contour, f'Area: {int(area)}', (x + w + 10, y + 35))
-        return rects
+            self.write_text(img_contour, f'Points: {len(approx)}', (x + x_offset + w + 10, y + y_offset + 20))
+            self.write_text(img_contour, f'Area: {int(area)}', (x + x_offset + w + 10, y + y_offset + 35))
 
     # DISPLAYING IMAGES
 
@@ -714,5 +738,5 @@ class ImageProcessingBotService:
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.5,
             color=(0, 255, 0),
-            thickness=2
+            thickness=1
         )

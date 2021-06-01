@@ -39,7 +39,7 @@ while cv2.waitKey(1) or 0xFF == ord('q'):
     dilated = img_bot.dilate(canny, dilation_kernel, dilation_iterations)
     eroded = img_bot.erode(dilated, erosion_kernel, erosion_iterations)
 
-    img_bot.draw_contours(eroded, contour, contour_min_area, contour_max_area)
+    img_bot.find_and_draw_contours(eroded, contour, contour_min_area, contour_max_area)
 
     img_stack = [[img, blurred],
                  [brightness_adjusted, contrast_adjusted],
