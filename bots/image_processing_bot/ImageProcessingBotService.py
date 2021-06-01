@@ -76,6 +76,12 @@ class ImageProcessingBotService:
 
     @staticmethod
     def screenshot_window(window_name=constants.LOTRO_WINDOW):
+        """
+        Takes a screenshot of a window (Default=Lotro Window)
+        :param window_name: Name of the window to take screenshot of
+        :return: npArray
+        :TODO -> Understand and comment the code
+        """
         # SOURCE CODE:
         # https://stackoverflow.com/questions/19695214/python-screenshot-of-inactive-window-printwindow-win32gui/24352388#24352388
 
@@ -138,6 +144,12 @@ class ImageProcessingBotService:
 
     @staticmethod
     def resize_image(img, scale=0.5):
+        """
+        Resizes the image
+        :param img: Image to resize
+        :param scale: Multiplier of the resize
+        :return: npArray
+        """
         width = int(img.shape[1] * scale)
         height = int(img.shape[0] * scale)
         dim = (width, height)
@@ -146,11 +158,21 @@ class ImageProcessingBotService:
     # WINDOWS
 
     def create_window(self, window_name):
+        """
+        Creates a window if a window of the same name is not open
+        :param window_name: Name of the window
+        :return: None
+        """
         if not self.is_window_open(window_name):
             cv2.namedWindow(window_name)
 
     @staticmethod
     def is_window_open(window_name):
+        """
+        Checks if a window is open
+        :param window_name: Name of the window to check
+        :return: boolean
+        """
         if cv2.getWindowImageRect(window_name) == (-1, -1, -1, -1):
             return False
         return True
@@ -174,9 +196,7 @@ class ImageProcessingBotService:
         :param window_name: Name of the window (Default="Canny")
         :return: None
         """
-
         self.create_window(window_name)
-
         cv2.createTrackbar("TH1", window_name, default_th1, 255, self.do_nothing)
         cv2.createTrackbar("TH2", window_name, default_th2, 255, self.do_nothing)
 
@@ -190,34 +210,50 @@ class ImageProcessingBotService:
         """
         if default_max_area == 0:
             default_max_area = int(self.get_screen_width() * self.get_screen_height() / 10)
-
         self.create_window(window_name)
         cv2.createTrackbar("Min Area", window_name, default_min_area, default_max_area, self.do_nothing)
         cv2.createTrackbar("Max Area", window_name, default_max_area, default_max_area, self.do_nothing)
 
     def create_dilation_trackbar(self, default_kernel=5, default_iterations=1, window_name="Dilate"):
-
+        """
+        Creates trackbars to manipulate dilation values
+        :param default_kernel: Kernal
+        :param default_iterations: Iterations
+        :param window_name: Name of the window to set the trackbars
+        :return: None
+        """
         self.create_window(window_name)
-
         cv2.createTrackbar("D - KERN", window_name, default_kernel, 25, self.do_nothing)
         cv2.createTrackbar("D - ITER", window_name, default_iterations, 25, self.do_nothing)
 
     def create_erosion_trackbar(self, default_kernel=5, default_iterations=1, window_name="Erode"):
+        """
+        Creates trackbars to manipulate erosion values
+        :param default_kernel: Kernel
+        :param default_iterations: Iterations
+        :param window_name: Name of the window to set the trackbars
+        :return: None
+        """
         self.create_window(window_name)
-
         cv2.createTrackbar("E - KERN", window_name, default_kernel, 25, self.do_nothing)
         cv2.createTrackbar("E - ITER", window_name, default_iterations, 25, self.do_nothing)
 
     def create_gaussian_blur_trackbar(self, default_kernel=7, default_sigma_x=3, window_name="Gaussian Blur"):
+        """
+        Creates trackbars to manipulate gaussian blur values
+        :param default_kernel: Default value for the kernel trackbar
+        :param default_sigma_x: Default value for the sigma_x trackbar
+        :param window_name: Name of the window to set the trackbars
+        :return: None
+        """
         self.create_window(window_name)
-
         cv2.createTrackbar("GB - Kernel", window_name, default_kernel, 25, self.do_nothing)
         cv2.createTrackbar("GB - Sigma X", window_name, default_sigma_x, 100, self.do_nothing)
 
     def create_hsv_trackbar(self, default_lh=0, default_ls=0, default_lv=0, default_uh=179, default_us=255,
                             default_uv=255, window_name="HSV"):
         """
-        Creates trackbars to manipulate an images HSV values
+        Creates trackbars to manipulate hsv lower and upper values
         :param default_lh: The default lower hue value (Default=0)
         :param default_ls: The default lower saturation value (Default=0)
         :param default_lv: The default lower value (Default=0)
@@ -238,7 +274,16 @@ class ImageProcessingBotService:
         cv2.createTrackbar("UV", window_name, default_uv, 255, self.do_nothing)
 
     def create_rectangle_trackbar(self, default_x=0, default_y=1, default_width=100, default_height=100,
-                                  default_thickness=-1, window_name="Rectangle"):
+                                  window_name="Rectangle"):
+        """
+        Creates trackbars to alter a rectangle
+        :param default_x: Top value of rectangle
+        :param default_y: Left value of rectangle
+        :param default_width: Width value of rectangle
+        :param default_height: Height value of rectangle
+        :param window_name: Name of window trackbars should be located
+        :return: None
+        """
         cv2.createTrackbar("X", window_name, default_x, 1920, self.do_nothing)
         cv2.createTrackbar("Y", window_name, default_y, 1080, self.do_nothing)
         cv2.createTrackbar("W", window_name, default_width, 1920, self.do_nothing)
@@ -246,9 +291,7 @@ class ImageProcessingBotService:
 
     def create_segmentation_trackbar(self, default_x=0, default_y=0, default_size=5, window_name="Segmentation"):
         """
-        Creates a trackbar that can alter the segment position and size.
-        Must pass return values from 'get_segmentation_trackbar_values' to function for this to have an effect.
-
+        Creates trackbars to manipulate a segmented image size and position values
         :param default_x: The default value for the X trackbar value (Default=0)
         :param default_y: The default value for the Y trackbar value (Default=0)
         :param default_size: Default percentage
@@ -263,10 +306,22 @@ class ImageProcessingBotService:
         cv2.createTrackbar("Size", window_name, default_size, 100, self.do_nothing)
 
     def create_brightness_trackbar(self, default_brightness=0, window_name="Brightness"):
+        """
+        Creates trackbars to manipulate brightness value
+        :param default_brightness: Default brightness to set the trackbar
+        :param window_name: Name of the window
+        :return: None
+        """
         self.create_window(window_name)
         cv2.createTrackbar('Brightness L', window_name, default_brightness, 255, self.do_nothing)
 
     def create_contrast_trackbar(self, default_contrast=0, window_name="Contrast"):
+        """
+        Create trackbar to manipulate contrast value
+        :param default_contrast: Default contrast to set the tracker
+        :param window_name: Name of the window
+        :return:
+        """
         self.create_window(window_name)
         cv2.createTrackbar("Contrast L", window_name, default_contrast, 130, self.do_nothing)
 
@@ -274,6 +329,11 @@ class ImageProcessingBotService:
 
     @staticmethod
     def get_canny_trackbar_values(window_name="Canny"):
+        """
+        Method to get the canny values
+        :param window_name: Name of the window trackbars are lcoated
+        :return: integer, integer
+        """
         threshold_1 = cv2.getTrackbarPos("TH1", window_name)
         threshold_2 = cv2.getTrackbarPos("TH2", window_name)
 
@@ -281,6 +341,11 @@ class ImageProcessingBotService:
 
     @staticmethod
     def get_contour_trackbar_values(window_name="Contour"):
+        """
+        Method to get the contour values
+        :param window_name: Name of the window trackbars are located
+        :return: integer, integer
+        """
         min_area = cv2.getTrackbarPos("Min Area", window_name)
         max_area = cv2.getTrackbarPos("Max Area", window_name)
 
@@ -288,6 +353,11 @@ class ImageProcessingBotService:
 
     @staticmethod
     def get_dilation_trackbar_values(window_name="Dilate"):
+        """
+        Method to get the dilation values
+        :param window_name: Name of the window trackbars are located
+        :return: Tuple, integer
+        """
         kernel_value = cv2.getTrackbarPos("D - KERN", window_name)
         if kernel_value % 2 != 1:
             kernel_value += 1
@@ -299,6 +369,11 @@ class ImageProcessingBotService:
 
     @staticmethod
     def get_erosion_trackbar_values(window_name="Erode"):
+        """
+        Method to get the erosion values
+        :param window_name: Name of the window trackbars are located
+        :return: Tuple, integer
+        """
         kernel_value = cv2.getTrackbarPos("E - KERN", window_name)
         if kernel_value % 2 != 1:
             kernel_value += 1
@@ -310,6 +385,11 @@ class ImageProcessingBotService:
 
     @staticmethod
     def get_gaussian_blur_trackbar_values(window_name="Gaussian Blur"):
+        """
+        Method to get the gaussian blur values
+        :param window_name: Name of the window trackbars are located
+        :return: Tuple, integer
+        """
         kernel_value = cv2.getTrackbarPos("GB - Kernel", window_name)
         if kernel_value % 2 != 1:
             kernel_value += 1
@@ -322,8 +402,8 @@ class ImageProcessingBotService:
     @staticmethod
     def get_hsv_trackbar_values(window_name="HSV"):
         """
-        Returns the HSV values from a window containing HSV trackbars
-        :param window_name: Name of the window. Default="Trackbars"
+        Method to get the HSV values from a window containing HSV trackbars
+        :param window_name: Name of the window. Default="HSV"
         :return: tuple. This tuple contains both the lower (index: 0), and upper (index: 1) values of a given hsv trackbar
         """
         l_h = cv2.getTrackbarPos("LH", window_name)
@@ -340,6 +420,11 @@ class ImageProcessingBotService:
 
     @staticmethod
     def get_rectangle_trackbar_values(window_name="Rectangle"):
+        """
+        Method to get the size and position values of a rectangle
+        :param window_name: Name of the window
+        :return: None
+        """
         x = cv2.getTrackbarPos("X", window_name)
         y = cv2.getTrackbarPos("Y", window_name)
         width = cv2.getTrackbarPos("W", window_name)
@@ -349,6 +434,11 @@ class ImageProcessingBotService:
 
     @staticmethod
     def get_segmentation_trackbar_values(window_name="Segmentation"):
+        """
+        Method to get the value of the segmented section of the image
+        :param window_name: Name of the window the trackbar is located
+        :return: integer, integer, integer
+        """
         x = cv2.getTrackbarPos("X", window_name)
         y = cv2.getTrackbarPos("Y", window_name)
         size = cv2.getTrackbarPos("Size", window_name)
@@ -356,11 +446,21 @@ class ImageProcessingBotService:
         return x, y, size
 
     @staticmethod
-    def get_brightness_value(window_name="Brightness"):
+    def get_brightness_trackbar_value(window_name="Brightness"):
+        """
+        Method to get the value of the brightness trackbar
+        :param window_name: Name of the window the trackbar is located
+        :return: integer
+        """
         return cv2.getTrackbarPos('Brightness L', window_name)
 
     @staticmethod
-    def get_contrast_value(window_name="Contrast"):
+    def get_contrast_trackbar_value(window_name="Contrast"):
+        """
+        Method to get the value of the contrast trackbar
+        :param window_name: Name of the window the trackbar is located
+        :return: integer
+        """
         return cv2.getTrackbarPos("Contrast L", window_name)
 
     # PROCESSING
@@ -378,12 +478,24 @@ class ImageProcessingBotService:
 
     @staticmethod
     def mask(img, lower, upper):
+        """
+        Method to handle masking an image
+        :param img: Image to mask
+        :param lower: Lower HSV value threshold to define mask
+        :param upper: Upper HSV value threshold to define mask
+        :return: npArray (of the image AFTER masking)
+        """
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, lower, upper)
         res = cv2.bitwise_and(img, img, mask=mask)
         return res
 
     def gray(self, img):
+        """
+        Method to handle grayscaling an image
+        :param img: Image to process
+        :return: npArray
+        """
         return self.convert_to_bgr(
             cv2.cvtColor(
                 self.convert_to_bgr(img),
@@ -393,18 +505,45 @@ class ImageProcessingBotService:
 
     @staticmethod
     def canny(img, threshold_1, threshold_2):
+        """
+        Method to handle cannying the image
+        :param img: Image to process
+        :param threshold_1: Threshold 1
+        :param threshold_2: Threshold 2
+        :return: npArray
+        """
         return cv2.Canny(img, threshold_1, threshold_2)
 
     @staticmethod
     def dilate(img, kernel=np.ones((5, 5)), iterations=1):
+        """
+        Method to handle dilating the image after canny
+        :param img: Image to process
+        :param kernel: Kernel
+        :param iterations: Iterations
+        :return: npArray
+        """
         return cv2.dilate(img, kernel, iterations=iterations)
 
     @staticmethod
     def erode(img, kernel=np.ones((5, 5)), iterations=1):
+        """
+        Method to handle eroding the image after canny
+        :param img: Image to process
+        :param kernel: Kernel
+        :param iterations: Iterations
+        :return: npArray
+        """
         return cv2.erode(img, kernel, iterations=iterations)
 
     @staticmethod
     def adjust_brightness(img, brightness=0):
+        """
+        Method to handle processing the brightness of an image
+        :param img: Image to process
+        :param brightness: Level of contrast
+        :return: npArray
+        """
         if brightness != 0:
             if brightness > 0:
                 shadow = brightness
@@ -421,6 +560,12 @@ class ImageProcessingBotService:
 
     @staticmethod
     def adjust_contrast(img, contrast=0):
+        """
+        Method to handle processing the contrast of an image
+        :param img: Image to process
+        :param contrast: Level of contrast
+        :return: npArray
+        """
         if contrast != 0:
             f = 131 * (contrast + 127) / (127 * (131 - contrast))
             alpha_c = f
@@ -452,11 +597,13 @@ class ImageProcessingBotService:
         :param img_contour: Image to draw contours on
         :param min_area: Minimum area to detect contour
         :param max_area: Maximum area to detect contour
-        :return: None
+        :return: Tuples (x, y, w, h)
         """
         if max_area is None:
             max_area = int(self.get_screen_width() * self.get_screen_height() / 10)
         contours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        rects = []
 
         for cnt in contours:
             area = cv2.contourArea(cnt)
@@ -465,15 +612,24 @@ class ImageProcessingBotService:
                 perimeter = cv2.arcLength(cnt, True)
                 approx = cv2.approxPolyDP(cnt, 0.02 * perimeter, True)
                 x, y, w, h = cv2.boundingRect(approx)
+                rects.append((x, y, w, h))
 
                 self.draw_rectangle(img_contour, (x, y, w, h))
 
-                self.create_text(img_contour, f'Points: {len(approx)}', (x + w + 20, y + 20))
-                self.create_text(img_contour, f'Area: {int(area)}', (x + w + 20, y + 50))
+                self.write_text(img_contour, f'Points: {len(approx)}', (x + w + 10, y + 20))
+                self.write_text(img_contour, f'Area: {int(area)}', (x + w + 10, y + 35))
+        return rects
 
     # DISPLAYING IMAGES
 
     def get_blank_image(self, height=None, width=None, channels=3):
+        """
+        Creates a blank image as a placeholder
+        :param height: Height of the blank image
+        :param width: Width of the blank image
+        :param channels: Count of channels of the blank image
+        :return: None
+        """
         if height is None:
             height = self.get_screen_height()
         if width is None:
@@ -483,7 +639,6 @@ class ImageProcessingBotService:
     def stack_images(self, img_arr, scale=1):
         """
         Concatenates images into a grid.
-        :todo Allow different size images to be input
         :param img_arr: List of images. Can be 1 or 2 dimensional
         :param scale: scaling value
         :return: nparray
@@ -524,7 +679,7 @@ class ImageProcessingBotService:
         return ver
 
     @staticmethod
-    def create_text(img, text, org):
+    def write_text(img, text, org):
         """
         Writes text to an image
         :param img: Image to draw
@@ -537,7 +692,7 @@ class ImageProcessingBotService:
             text=text,
             org=org,
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-            fontScale=0.8,
+            fontScale=0.6,
             color=(0, 255, 0),
-            thickness=2
+            thickness=1
         )

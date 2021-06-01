@@ -37,8 +37,8 @@ def main():
 
         # GET TRACKBAR VALUES
         blur_kernel, blur_sigma_x = bot.get_gaussian_blur_trackbar_values('Trackbar')
-        brightness = bot.get_brightness_value('Trackbar')
-        contrast = bot.get_contrast_value('Trackbar')
+        brightness = bot.get_brightness_trackbar_value('Trackbar')
+        contrast = bot.get_contrast_trackbar_value('Trackbar')
         hsv_lower, hsv_upper = bot.get_hsv_trackbar_values('Trackbar')
         canny_thresh_1, canny_thresh_2 = bot.get_canny_trackbar_values('Trackbar')
         dilation_kernel, dilation_iterations = bot.get_dilation_trackbar_values('Trackbar')

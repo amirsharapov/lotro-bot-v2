@@ -18,8 +18,8 @@ img_bot.create_rectangle_trackbar(window_name='Trackbar')
 
 while cv2.waitKey(1) or 0xFF == ord('q'):
     blur_kernel, blur_sigma_x = img_bot.get_gaussian_blur_trackbar_values('Trackbar')
-    brightness = img_bot.get_brightness_value('Trackbar')
-    contrast = img_bot.get_contrast_value('Trackbar')
+    brightness = img_bot.get_brightness_trackbar_value('Trackbar')
+    contrast = img_bot.get_contrast_trackbar_value('Trackbar')
     hsv_lower, hsv_upper = img_bot.get_hsv_trackbar_values('Trackbar')
     canny_thresh_1, canny_thresh_2 = img_bot.get_canny_trackbar_values('Trackbar')
     dilation_kernel, dilation_iterations = img_bot.get_dilation_trackbar_values('Trackbar')

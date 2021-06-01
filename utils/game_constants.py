@@ -51,7 +51,7 @@ RECOGNITION = {
                 'contrast': {
                     'level': 55
                 },
-                'hsv_mask_range': {
+                'mask': {
                     'lower_hue': 0,
                     'lower_saturation': 0,
                     'lower_value': 5,
@@ -59,7 +59,7 @@ RECOGNITION = {
                     'upper_saturation': 100,
                     'upper_value': 150
                 },
-                'canny_threshold': {
+                'canny': {
                     'threshold_1': 140,
                     'threshold_2': 140
                 },
@@ -71,7 +71,7 @@ RECOGNITION = {
                     'kernel': np.ones((5, 5), np.uint8),
                     'iterations': 7
                 },
-                'contour_area_range': {
+                'contour': {
                     'min_area': 1000,
                     'max_area': 15000
                 }
@@ -82,7 +82,7 @@ RECOGNITION = {
         'mini_map': {
             'crafting_facility': {
                 'gaussian_blur': {
-                    'kernel': (2, 2),
+                    'kernel': (3, 3),
                     'sigma_x': 17
                 },
                 'brightness': {

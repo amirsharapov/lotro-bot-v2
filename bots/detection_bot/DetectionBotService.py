@@ -15,22 +15,22 @@ class IdentificationBotService:
         self.skill_bar_rect = game_constants.LOCATIONS['skill_bar']
 
     def detect_yellow_colors(self):
+        detection_obj_values = game_constants.RECOGNITION['nameplates']['colors']['yellow']
 
-        # PROCESSING
-        gaussian_kernel = game_constants.YELLOW_COLOR['gaussian_blur']['kernel']
-        gaussian_sigma_x = game_constants.YELLOW_COLOR['gaussian_blur']['sigma_x']
-        threshold_1 = game_constants.YELLOW_COLOR['canny_threshold']['threshold_1']
-        threshold_2 = game_constants.YELLOW_COLOR['canny_threshold']['threshold_2']
-        lower_hsv = (game_constants.YELLOW_COLOR['hsv_mask_range']['lower_hue'],
-                     game_constants.YELLOW_COLOR['hsv_mask_range']['lower_saturation'],
-                     game_constants.YELLOW_COLOR['hsv_mask_range']['lower_value'])
-        upper_hsv = (game_constants.YELLOW_COLOR['hsv_mask_range']['upper_hue'],
-                     game_constants.YELLOW_COLOR['hsv_mask_range']['upper_saturation'],
-                     game_constants.YELLOW_COLOR['hsv_mask_range']['upper_value'])
-        contour_min_area = game_constants.YELLOW_COLOR['contour_area_range']['min_area']
-        contour_max_area = game_constants.YELLOW_COLOR['contour_area_range']['max_area']
-        dilation_kernel = game_constants.YELLOW_COLOR['dilation']['kernel']
-        dilation_iterations = game_constants.YELLOW_COLOR['dilation']['iterations']
+        gaussian_kernel = detection_obj_values['gaussian_blur']['kernel']
+        gaussian_sigma_x = detection_obj_values['gaussian_blur']['sigma_x']
+        threshold_1 = detection_obj_values['canny']['threshold_1']
+        threshold_2 = detection_obj_values['canny']['threshold_2']
+        lower_hsv = (detection_obj_values['mask']['lower_hue'],
+                     detection_obj_values['mask']['lower_saturation'],
+                     detection_obj_values['mask']['lower_value'])
+        upper_hsv = (detection_obj_values['mask']['upper_hue'],
+                     detection_obj_values['mask']['upper_saturation'],
+                     detection_obj_values['mask']['upper_value'])
+        contour_min_area = detection_obj_values['contour']['min_area']
+        contour_max_area = detection_obj_values['contour']['max_area']
+        dilation_kernel = detection_obj_values['dilation']['kernel']
+        dilation_iterations = detection_obj_values['dilation']['iterations']
 
         while cv2.waitKey(1) or 0xFF == ord('q'):
 
@@ -59,24 +59,26 @@ class IdentificationBotService:
         cv2.destroyAllWindows()
 
     def detect_white_colors(self):
-        gaussian_kernel = game_constants.WHITE_COLOR['gaussian_blur']['kernel']
-        gaussian_sigma_x = game_constants.WHITE_COLOR['gaussian_blur']['sigma_x']
-        brightness = game_constants.WHITE_COLOR['brightness']['level']
-        contrast = game_constants.WHITE_COLOR['contrast']['level']
-        threshold_1 = game_constants.WHITE_COLOR['canny_threshold']['threshold_1']
-        threshold_2 = game_constants.WHITE_COLOR['canny_threshold']['threshold_2']
-        lower_hsv = (game_constants.WHITE_COLOR['hsv_mask_range']['lower_hue'],
-                     game_constants.WHITE_COLOR['hsv_mask_range']['lower_saturation'],
-                     game_constants.WHITE_COLOR['hsv_mask_range']['lower_value'])
-        upper_hsv = (game_constants.WHITE_COLOR['hsv_mask_range']['upper_hue'],
-                     game_constants.WHITE_COLOR['hsv_mask_range']['upper_saturation'],
-                     game_constants.WHITE_COLOR['hsv_mask_range']['upper_value'])
-        contour_min_area = game_constants.WHITE_COLOR['contour_area_range']['min_area']
-        contour_max_area = game_constants.WHITE_COLOR['contour_area_range']['max_area']
-        dilation_kernel = game_constants.WHITE_COLOR['dilation']['kernel']
-        dilation_iterations = game_constants.WHITE_COLOR['dilation']['iterations']
-        erosion_kernel = game_constants.WHITE_COLOR['erosion']['kernel']
-        erosion_iterations = game_constants.WHITE_COLOR['erosion']['iterations']
+        detection_obj_values = game_constants.RECOGNITION['nameplates']['colors']['white']
+
+        gaussian_kernel = detection_obj_values['gaussian_blur']['kernel']
+        gaussian_sigma_x = detection_obj_values['gaussian_blur']['sigma_x']
+        brightness = detection_obj_values['brightness']['level']
+        contrast = detection_obj_values['contrast']['level']
+        threshold_1 = detection_obj_values['canny']['threshold_1']
+        threshold_2 = detection_obj_values['canny']['threshold_2']
+        lower_hsv = (detection_obj_values['mask']['lower_hue'],
+                     detection_obj_values['mask']['lower_saturation'],
+                     detection_obj_values['mask']['lower_value'])
+        upper_hsv = (detection_obj_values['mask']['upper_hue'],
+                     detection_obj_values['mask']['upper_saturation'],
+                     detection_obj_values['mask']['upper_value'])
+        contour_min_area = detection_obj_values['contour']['min_area']
+        contour_max_area = detection_obj_values['contour']['max_area']
+        dilation_kernel = detection_obj_values['dilation']['kernel']
+        dilation_iterations = detection_obj_values['dilation']['iterations']
+        erosion_kernel = detection_obj_values['erosion']['kernel']
+        erosion_iterations = detection_obj_values['erosion']['iterations']
 
         while cv2.waitKey(1) or 0xFF == ord('q'):
 
@@ -101,5 +103,5 @@ class IdentificationBotService:
 
 bot = IdentificationBotService()
 
-# bot.detect_white_colors()
-bot.detect_yellow_colors()
+bot.detect_white_colors()
+# bot.detect_yellow_colors()
