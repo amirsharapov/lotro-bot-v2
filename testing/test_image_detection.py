@@ -4,6 +4,7 @@ import cv2
 import cv2 as cv
 
 from bots.image_processing_bot.ImageProcessingBotService import ImageProcessingBotService
+from bots.navigation_bot.NavigationBot import NavigationBot
 from utils import game_constants
 
 bot = ImageProcessingBotService()
@@ -87,4 +88,5 @@ def main():
             break
 
 
-main()
+nav_bot = NavigationBot()
+nav_bot.detect_mini_map_character_marker()

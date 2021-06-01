@@ -2,8 +2,16 @@
 TARGET_MONITOR = 1
 LOTRO_WINDOW = 'The Lord of the Rings Online™'
 
+FILE_STRFTIME_FORMAT = "%Y%m%d_%H%M%S%f"
+
 # PATH CONSTANTS
 PROJECT_PATH = r"C:\Users\Amir Sharapov\Code\bots\lotro-bot-v2"
-IMAGES_PATH = PROJECT_PATH + r"\data\images"
+DATA_PATH = PROJECT_PATH + r"\data"
+
+IMAGES_PATH = DATA_PATH + r"\images"
+MACHINE_LEARNING_PATH = DATA_PATH + r"\machine_learning"
+
+TESTING_DATA_PATH = MACHINE_LEARNING_PATH + r'\testing_data'
+TRAINING_DATA_PATH = MACHINE_LEARNING_PATH + r'\training_data'
 
 # DEFAULT SLIDER OPTIONS

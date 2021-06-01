@@ -13,7 +13,7 @@ img_bot.create_hsv_trackbar(window_name='Trackbar')
 img_bot.create_canny_trackbar(120, 120, 'Trackbar')
 img_bot.create_dilation_trackbar(window_name='Trackbar')
 img_bot.create_erosion_trackbar(window_name='Trackbar')
-img_bot.create_contour_trackbar(window_name='Trackbar', default_max_area=5000)
+img_bot.create_contour_trackbar(window_name='Trackbar', default_max_area=25000)
 img_bot.create_rectangle_trackbar(window_name='Trackbar')
 
 while cv2.waitKey(1) or 0xFF == ord('q'):
@@ -26,7 +26,7 @@ while cv2.waitKey(1) or 0xFF == ord('q'):
     erosion_kernel, erosion_iterations = img_bot.get_erosion_trackbar_values('Trackbar')
     contour_min_area, contour_max_area = img_bot.get_contour_trackbar_values('Trackbar')
 
-    img = nav_bot.get_mini_map()
+    img = nav_bot.get_mini_map_cropped()
     img = img_bot.convert_to_bgr(img)
     contour = img.copy()
 
@@ -47,8 +47,8 @@ while cv2.waitKey(1) or 0xFF == ord('q'):
                  [canny, dilated],
                  [eroded, contour]]
 
-    stacked = img_bot.stack_images(img_stack, 3.5)
+    stacked = img_bot.stack_images(img_stack, 6)
 
-    cv2.imshow('mini map', stacked)
+    cv2.imshow("Stacked", stacked)
 
 cv2.destroyAllWindows()

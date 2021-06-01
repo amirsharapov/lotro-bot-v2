@@ -1,13 +1,13 @@
-from bots.detection_bot.DetectionBotService import IdentificationBotService
+from bots.detection_bot.DetectionBotService import DetectionBotService
 
 
 class IdentificationBot:
     def __init__(self):
-        self.service = IdentificationBotService()
+        self.service = DetectionBotService()
 
-    def identify_npc_nameplates(self):
+    def detect_npc_nameplates(self):
         """
         This will run a loop, and identify the NPC nameplates on screen
         :return:
         """
-        self.service.detect_yellow_colors()
+        self.service.detect_yellow_nameplates()

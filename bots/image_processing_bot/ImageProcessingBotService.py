@@ -1,5 +1,7 @@
+import datetime
 from ctypes import windll
 
+import PIL
 import cv2
 import mss
 import numpy as np
@@ -18,6 +20,35 @@ class ImageProcessingBotService:
         """
         self.target_monitor_width = self.get_screen_width()
         self.target_monitor_height = self.get_screen_height()
+        self.ml_training_data_path = constants.TRAINING_DATA_PATH
+
+    # WINDOWS
+
+    def create_window(self, window_name, window_size=None):
+        """
+        Creates a window if a window of the same name is not open
+        :param window_size: Size of the window
+        :param window_name: Name of the window
+        :return: None
+        """
+        if window_size is None:
+            if not self.is_window_open(window_name):
+                cv2.namedWindow(window_name)
+                if window_size is not None:
+                    w = window_size[0]
+                    h = window_size[1]
+                    cv2.resizeWindow(window_name, w, h)
+
+    @staticmethod
+    def is_window_open(window_name):
+        """
+        Checks if a window is open
+        :param window_name: Name of the window to check
+        :return: boolean
+        """
+        if cv2.getWindowImageRect(window_name) == (-1, -1, -1, -1):
+            return False
+        return True
 
     # CONVERSIONS
 
@@ -61,13 +92,17 @@ class ImageProcessingBotService:
         return GetSystemMetrics(1)
 
     # noinspection PyTypeChecker
-    def screenshot(self):
+    def screenshot(self, rect=None):
         """
         Takes a screenshot of the monitor defined in the constants file
         :return: ndarray
         """
         sct = mss.mss()
-        monitor = sct.monitors[constants.TARGET_MONITOR]
+        if rect is None:
+            monitor = sct.monitors[constants.TARGET_MONITOR]
+        else:
+            y, x, w, h = rect
+            monitor = {'top': y, 'left': x, 'width': w, 'height': h}
         return self.convert_to_bgr(
             np.array(
                 sct.grab(monitor)
@@ -123,6 +158,8 @@ class ImageProcessingBotService:
                 cv2.COLOR_RGB2BGR
             )
 
+    # OTHER
+
     def get_img_segment(self, img, rect=(0, 0, 0, 0)):
         """
         (npArray) -> (npArray)
@@ -140,8 +177,6 @@ class ImageProcessingBotService:
 
         return img[y:y + h, x:x + w]
 
-    # IMAGE MANIPULATION
-
     @staticmethod
     def resize_image(img, scale=0.5):
         """
@@ -155,27 +190,12 @@ class ImageProcessingBotService:
         dim = (width, height)
         return cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
 
-    # WINDOWS
-
-    def create_window(self, window_name):
-        """
-        Creates a window if a window of the same name is not open
-        :param window_name: Name of the window
-        :return: None
-        """
-        if not self.is_window_open(window_name):
-            cv2.namedWindow(window_name)
-
     @staticmethod
-    def is_window_open(window_name):
-        """
-        Checks if a window is open
-        :param window_name: Name of the window to check
-        :return: boolean
-        """
-        if cv2.getWindowImageRect(window_name) == (-1, -1, -1, -1):
-            return False
-        return True
+    def save_as_training_data(img, prefix=""):
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = PIL.Image.fromarray(img)
+        now = datetime.datetime.now()
+        img.save(constants.TRAINING_DATA_PATH + f'\\{prefix}{now.strftime(constants.FILE_STRFTIME_FORMAT)}.png')
 
     # TRACKBARS - CREATE
 
@@ -578,7 +598,7 @@ class ImageProcessingBotService:
     # CONTOURS
 
     @staticmethod
-    def draw_rectangle(img, rect, color=(0, 255, 0), thickness=3):
+    def draw_rectangle(img, rect, color=(0, 255, 0), thickness=1):
         """
         Draws a rectangle on an image
         :param img: The image to draw the rectangle on
@@ -597,7 +617,7 @@ class ImageProcessingBotService:
         :param img_contour: Image to draw contours on
         :param min_area: Minimum area to detect contour
         :param max_area: Maximum area to detect contour
-        :return: Tuples (x, y, w, h)
+        :return: array of Tuples [(x, y, w, h), ...]
         """
         if max_area is None:
             max_area = int(self.get_screen_width() * self.get_screen_height() / 10)
@@ -692,7 +712,7 @@ class ImageProcessingBotService:
             text=text,
             org=org,
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-            fontScale=0.6,
+            fontScale=0.5,
             color=(0, 255, 0),
-            thickness=1
+            thickness=2
         )
