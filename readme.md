@@ -53,14 +53,15 @@ Leveraging the following components in our bot:
 ```
 -lotro-bot-v2
     - bots
-        - movement
+        - movement bot
             - controller.py
             - service.py
-        - logging
+        - logging bot
             - controller.py
             - service.py
         - config
-        - learning bot
+        - ai bot
+        - mini-map bot
     - data
         - 
 ```
