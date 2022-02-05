@@ -1,9 +1,9 @@
 import cv2
 
 from bots.image_processing_bot.ImageProcessingBotService import ImageProcessingBotService
-from bots.navigation_bot.NavigationBot import NavigationBot
+from bots.navigation_bot.NavigationBotService import NavigationBotService
 
-nav_bot = NavigationBot()
+nav_bot = NavigationBotService()
 img_bot = ImageProcessingBotService()
 
 img_bot.create_gaussian_blur_trackbar(window_name='Trackbar')

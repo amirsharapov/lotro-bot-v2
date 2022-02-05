@@ -44,8 +44,8 @@ section, we will describe the main features of the game we leverage.
 Leveraging the following components in our bot:
 
 - Mini-map
-- Full map
 - Crafting panel
+- Nameplate
 - Vendor
 - Crafting facilities
 - Vault

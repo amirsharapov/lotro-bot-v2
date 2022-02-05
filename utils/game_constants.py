@@ -5,10 +5,10 @@ White Nameplate: [Blur, Brightness, Contrast, Mask, Gray, Canny, Dilate, Erode, 
 import numpy as np
 
 LOCATIONS = {
-    'portrait': (0, 0, 320, 140),
-    'mini_map': (1670, 0, 320, 280),
-    'mini_map_cropped': (60, 40, 130, 130),
     'chat': (0, 700, 450, 380),
+    'mini_map': (1670, 0, 320, 280),
+    'mini_map_cropped': (1730, 45, 130, 130),
+    'portrait': (0, 0, 320, 140),
     'skill_bar': (450, 960, 1040, 120)
 }
 
@@ -18,14 +18,14 @@ RECOGNITION = {
             'yellow': {
                 'gaussian_blur': {
                     'kernel': (7, 7),
-                    'sigma_x': 2
+                    'sigma_x': 7
                 },
                 'mask': {
-                    'lower_hue': 29,
-                    'lower_saturation': 205,
-                    'lower_value': 0,
+                    'lower_hue': 30,
+                    'lower_saturation': 215,
+                    'lower_value': 80,
                     'upper_hue': 45,
-                    'upper_saturation': 255,
+                    'upper_saturation': 240,
                     'upper_value': 255
                 },
                 'canny': {
@@ -33,11 +33,15 @@ RECOGNITION = {
                     'threshold_2': 120
                 },
                 'dilation': {
-                    'kernel': np.ones((5, 5)),
-                    'iterations': 7
+                    'kernel': np.ones((5, 5), np.uint8),
+                    'iterations': 9
+                },
+                'erosion': {
+                    'kernel': np.ones((5, 5), np.uint8),
+                    'iterations': 3
                 },
                 'contour': {
-                    'min_area': 300,
+                    'min_area': 1500,
                     'max_area': 10000
                 }
             },

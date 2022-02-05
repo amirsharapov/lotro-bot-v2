@@ -69,14 +69,6 @@ class ImageProcessingBotService:
     # SCREEN FUNCTIONS
 
     @staticmethod
-    def get_screen_dimensions():
-        """
-        Gets the height and width of the screen
-        :return: tuple
-        """
-        return GetSystemMetrics(0), GetSystemMetrics(1)
-
-    @staticmethod
     def get_screen_width():
         """
         Get the wdith of the screen
@@ -159,7 +151,78 @@ class ImageProcessingBotService:
                 cv2.COLOR_RGB2BGR
             )
 
-    # OTHER
+    # UTILS
+
+    def get_blank_image(self, height=None, width=None, channels=3):
+        """
+        Creates a blank image as a placeholder
+        :param height: Height of the blank image
+        :param width: Width of the blank image
+        :param channels: Count of channels of the blank image
+        :return: None
+        """
+        if height is None:
+            height = self.get_screen_height()
+        if width is None:
+            width = self.get_screen_width()
+        return np.zeros((height, width, channels), np.uint8)
+
+    def stack_images(self, img_arr, scale=1):
+        """
+        Concatenates images into a grid.
+        :param img_arr: List of images. Can be 1 or 2 dimensional
+        :param scale: scaling value
+        :return: nparray
+        """
+        x = len(img_arr)
+        y = len(img_arr[0])
+        z = max(x, y)
+        is_2d = isinstance(img_arr[0], list)
+        if is_2d:
+
+            resize_width = int(img_arr[0][0].shape[1] * scale / z)
+            resize_height = int(img_arr[0][0].shape[0] * scale / z)
+
+            for i in range(0, x):
+                for j in range(0, y):
+                    # CONVERT IMAGES TO SAME SIZE - IF ALREADY SAME SIZE, NOTHING CHANGES
+                    img_arr[i][j] = cv2.resize(img_arr[i][j], (resize_width, resize_height))
+                    # CONVERT IMAGES TO SAME CHANNEL
+                    img_arr[i][j] = self.convert_to_bgr(img_arr[i][j])
+
+            hor = []
+            for i in range(0, x):
+                hor.append(np.hstack(img_arr[i]))
+            ver = np.vstack(hor)
+        else:
+
+            resize_width = int(img_arr[0].shape[1] * scale / x)
+            resize_height = int(img_arr[0].shape[0] * scale / x)
+
+            for i in range(x):
+                # CONVERT IMAGES TO SAME SIZE - IF ALREADY SAME SIZE, NOTHING CHANGES
+                img_arr[i] = cv2.resize(img_arr[i], (resize_width, resize_height))
+                # CONVERT IMAGES TO SAME CHANNEL
+                img_arr[i] = self.convert_to_bgr(img_arr[i])
+
+            hor = np.hstack(img_arr)
+            ver = hor
+        return ver
+
+    @staticmethod
+    def resize_image(img, scale=0.5):
+        """
+        Resizes the image
+        :param img: Image to resize
+        :param scale: Multiplier of the resize
+        :return: npArray
+        """
+        width = int(img.shape[1] * scale)
+        height = int(img.shape[0] * scale)
+        dim = (width, height)
+        return cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
+
+    # DATA FILTER / COLLECTION
 
     def get_img_segment(self, img, rect=(0, 0, 0, 0)):
         """
@@ -179,20 +242,7 @@ class ImageProcessingBotService:
         return img[y:y + h, x:x + w]
 
     @staticmethod
-    def resize_image(img, scale=0.5):
-        """
-        Resizes the image
-        :param img: Image to resize
-        :param scale: Multiplier of the resize
-        :return: npArray
-        """
-        width = int(img.shape[1] * scale)
-        height = int(img.shape[0] * scale)
-        dim = (width, height)
-        return cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
-
-    @staticmethod
-    def save_as_training_data(img, prefix=""):
+    def save_training_data(img, prefix=""):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = PIL.Image.fromarray(img)
         now = datetime.datetime.now()
@@ -271,7 +321,7 @@ class ImageProcessingBotService:
         cv2.createTrackbar("GB - Kernel", window_name, default_kernel, 25, self.do_nothing)
         cv2.createTrackbar("GB - Sigma X", window_name, default_sigma_x, 100, self.do_nothing)
 
-    def create_hsv_trackbar(self, default_lh=0, default_ls=0, default_lv=0, default_uh=179, default_us=255,
+    def create_hsv_trackbar(self, default_lh=0, default_ls=0, default_lv=0, default_uh=255, default_us=255,
                             default_uv=255, window_name="HSV"):
         """
         Creates trackbars to manipulate hsv lower and upper values
@@ -287,10 +337,10 @@ class ImageProcessingBotService:
 
         self.create_window(window_name)
 
-        cv2.createTrackbar("LH", window_name, default_lh, 179, self.do_nothing)
+        cv2.createTrackbar("LH", window_name, default_lh, 255, self.do_nothing)
         cv2.createTrackbar("LS", window_name, default_ls, 255, self.do_nothing)
         cv2.createTrackbar("LV", window_name, default_lv, 255, self.do_nothing)
-        cv2.createTrackbar("UH", window_name, default_uh, 179, self.do_nothing)
+        cv2.createTrackbar("UH", window_name, default_uh, 255, self.do_nothing)
         cv2.createTrackbar("US", window_name, default_us, 255, self.do_nothing)
         cv2.createTrackbar("UV", window_name, default_uv, 255, self.do_nothing)
 
@@ -596,7 +646,13 @@ class ImageProcessingBotService:
 
         return img.copy()
 
-    # CONTOURS
+    # MARKUP
+
+    @staticmethod
+    def draw_contour(img, contour, color=(0, 255, 0), thickness=2, offset=(0, 0)):
+        if offset == (0, 0):
+            offset = None
+        cv2.drawContours(img, contour, -1, color, thickness, offset=offset)
 
     @staticmethod
     def draw_rectangle(img, rect, color=(0, 255, 0), thickness=1):
@@ -610,6 +666,27 @@ class ImageProcessingBotService:
         """
         x, y, width, height = rect
         cv2.rectangle(img, (x, y), (x + width, y + height), color, thickness=thickness)
+
+    @staticmethod
+    def write_text(img, text, org):
+        """
+        Writes text to an image
+        :param img: Image to draw
+        :param text: Text to display
+        :param org: Position of the text
+        :return: None
+        """
+        cv2.putText(
+            img=img,
+            text=text,
+            org=org,
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=0.5,
+            color=(0, 255, 0),
+            thickness=1
+        )
+
+    # CONTOURS
 
     def find_contours(self, img, min_area=0, max_area=0, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_NONE):
         """
@@ -636,26 +713,22 @@ class ImageProcessingBotService:
                 filtered_contours.append((contour, area, approx, (x, y, w, h)))
         return filtered_contours
 
-    @staticmethod
-    def draw_contour(img, contour, color=(0, 255, 0), thickness=2, offset=(0, 0)):
-        if offset == (0, 0):
-            offset = None
-        cv2.drawContours(img, contour, -1, color, thickness, offset=offset)
-
-    def find_and_draw_contours(self, img, contour_canvas, min_area=1000, max_area=None, drawing_offset=(0, 0)):
+    def find_and_draw_contours(self, img, contour_canvas, min_area=1000, max_area=None, drawing_offset=(0, 0), collect_data=False):
         """
         Draws contours on an image
-        :param drawing_offset: offset for the contour and object drawing
         :param img: Image to detect contours
         :param contour_canvas: Image to draw contours on
         :param min_area: Minimum area to detect contour
         :param max_area: Maximum area to detect contour
+        :param drawing_offset: offset for the contour and object drawing
+        :param collect_data: Whether to collect data
         :return: array of Tuples [(x, y, w, h), ...]
         """
         # DETECT OBJECTS
         contours = self.find_contours(img, min_area, max_area)
         x_offset, y_offset = drawing_offset
-        # clean_img = contour_canvas.copy()
+        if collect_data:
+            clean_img = contour_canvas.copy()
 
         # FOR EACH OBJECT, DRAW CONTOUR AND RECTANGLE
         for cnt, area, approx, rect in contours:
@@ -663,85 +736,9 @@ class ImageProcessingBotService:
             x, y, w, h = rect
 
             self.draw_rectangle(contour_canvas, (x + x_offset, y + y_offset, w, h))
-            # segment = self.get_img_segment(clean_img, (x + x_offset, y + y_offset, w, h))
-            # self.save_as_training_data(segment)
+            if collect_data is not False:
+                segment = self.get_img_segment(clean_img, (x + x_offset, y + y_offset, w, h))
+                self.save_training_data(segment)
 
             self.write_text(contour_canvas, f'Points: {len(approx)}', (x + x_offset + w + 10, y + y_offset + 20))
             self.write_text(contour_canvas, f'Area: {int(area)}', (x + x_offset + w + 10, y + y_offset + 35))
-
-    # DISPLAYING IMAGES
-
-    def get_blank_image(self, height=None, width=None, channels=3):
-        """
-        Creates a blank image as a placeholder
-        :param height: Height of the blank image
-        :param width: Width of the blank image
-        :param channels: Count of channels of the blank image
-        :return: None
-        """
-        if height is None:
-            height = self.get_screen_height()
-        if width is None:
-            width = self.get_screen_width()
-        return np.zeros((height, width, channels), np.uint8)
-
-    def stack_images(self, img_arr, scale=1):
-        """
-        Concatenates images into a grid.
-        :param img_arr: List of images. Can be 1 or 2 dimensional
-        :param scale: scaling value
-        :return: nparray
-        """
-        x = len(img_arr)
-        y = len(img_arr[0])
-        z = max(x, y)
-        is_2d = isinstance(img_arr[0], list)
-        if is_2d:
-
-            resize_width = int(img_arr[0][0].shape[1] * scale / z)
-            resize_height = int(img_arr[0][0].shape[0] * scale / z)
-
-            for i in range(0, x):
-                for j in range(0, y):
-                    # CONVERT IMAGES TO SAME SIZE - IF ALREADY SAME SIZE, NOTHING CHANGES
-                    img_arr[i][j] = cv2.resize(img_arr[i][j], (resize_width, resize_height))
-                    # CONVERT IMAGES TO SAME CHANNEL
-                    img_arr[i][j] = self.convert_to_bgr(img_arr[i][j])
-
-            hor = []
-            for i in range(0, x):
-                hor.append(np.hstack(img_arr[i]))
-            ver = np.vstack(hor)
-        else:
-
-            resize_width = int(img_arr[0].shape[1] * scale / x)
-            resize_height = int(img_arr[0].shape[0] * scale / x)
-
-            for i in range(x):
-                # CONVERT IMAGES TO SAME SIZE - IF ALREADY SAME SIZE, NOTHING CHANGES
-                img_arr[i] = cv2.resize(img_arr[i], (resize_width, resize_height))
-                # CONVERT IMAGES TO SAME CHANNEL
-                img_arr[i] = self.convert_to_bgr(img_arr[i])
-
-            hor = np.hstack(img_arr)
-            ver = hor
-        return ver
-
-    @staticmethod
-    def write_text(img, text, org):
-        """
-        Writes text to an image
-        :param img: Image to draw
-        :param text: Text to display
-        :param org: Position of the text
-        :return: None
-        """
-        cv2.putText(
-            img=img,
-            text=text,
-            org=org,
-            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-            fontScale=0.5,
-            color=(0, 255, 0),
-            thickness=1
-        )
